@@ -10,11 +10,13 @@ class InvalidArrangeEntry(Exception):
         super().__init__('Arrange entry "{}" is invalid.'.format(value))
 
 
-T = TypeVar('T')
+T = TypeVar("T")
 GetKeyCallable = Callable[[T], Optional[str]]
 
 
-def arrange(entries: List[T], config: List[str], get_key: GetKeyCallable = lambda x: x) -> List[T]:
+def arrange(
+    entries: List[T], config: List[str], get_key: GetKeyCallable = lambda x: x
+) -> List[T]:
     grouped = _group(entries, get_key)
     rest_index = None
     result = []
@@ -33,7 +35,9 @@ def arrange(entries: List[T], config: List[str], get_key: GetKeyCallable = lambd
         rest_index = len(result)
 
     # Add entries not already part of the result at the rest_index
-    result[rest_index:rest_index] = [entry for entry in entries if entry not in result]
+    result[rest_index:rest_index] = [
+        entry for entry in entries if entry not in result
+    ]
 
     return result
 

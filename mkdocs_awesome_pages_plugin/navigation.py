@@ -1,8 +1,14 @@
 import warnings
 from typing import List, Optional, Union, Dict
 
-from mkdocs.structure.nav import Navigation as MkDocsNavigation, Section, Link, \
-    _get_by_type, _add_parent_links, _add_previous_and_next_links
+from mkdocs.structure.nav import (
+    Navigation as MkDocsNavigation,
+    Section,
+    Link,
+    _get_by_type,
+    _add_parent_links,
+    _add_previous_and_next_links,
+)
 from mkdocs.structure.pages import Page
 
 from .arrange import arrange, InvalidArrangeEntry
@@ -15,27 +21,32 @@ NavigationItem = Union[Page, Section, Link]
 
 class ArrangeEntryNotFound(Warning):
     def __init__(self, entry: str, context: str):
-        super().__init__('Arrange entry "{entry}" not found. [{context}]'.format(entry=entry, context=context))
+        super().__init__(
+            'Arrange entry "{entry}" not found. [{context}]'.format(
+                entry=entry, context=context
+            )
+        )
 
 
 class TitleInRootHasNoEffect(Warning):
     def __init__(self, filename: str):
         super().__init__(
-            'Using the "title" attribute in the {filename} file of the doc root has no effect'
-            .format(filename=filename)
+            'Using the "title" attribute in the {filename} file of the doc root has no effect'.format(
+                filename=filename
+            )
         )
 
 
 class HideInRootHasNoEffect(Warning):
     def __init__(self, filename: str):
         super().__init__(
-            'Using the "hide" attribute in the {filename} file of the doc root has no effect'
-            .format(filename=filename)
+            'Using the "hide" attribute in the {filename} file of the doc root has no effect'.format(
+                filename=filename
+            )
         )
 
 
 class AwesomeNavigation:
-
     def __init__(self, navigation: MkDocsNavigation, options: Options):
         self.options = options
 
@@ -48,12 +59,12 @@ class AwesomeNavigation:
             warnings.warn(HideInRootHasNoEffect(self.options.filename))
 
         self.items = self._process_children(
-            navigation.items,
-            self.options.collapse_single_pages,
-            self.meta.root
+            navigation.items, self.options.collapse_single_pages, self.meta.root
         )
 
-    def _process_children(self, children: List[NavigationItem], collapse: bool, meta: Meta) -> List[NavigationItem]:
+    def _process_children(
+        self, children: List[NavigationItem], collapse: bool, meta: Meta
+    ) -> List[NavigationItem]:
         children = self._arrange_items(children, meta)
         result = []
 
@@ -66,10 +77,17 @@ class AwesomeNavigation:
 
         return result
 
-    def _arrange_items(self, items: List[NavigationItem], meta: Meta) -> List[NavigationItem]:
+    def _arrange_items(
+        self, items: List[NavigationItem], meta: Meta
+    ) -> List[NavigationItem]:
         if meta.arrange is not None:
             try:
-                return arrange(items, meta.arrange, lambda item: basename(self._get_item_path(item)))
+                arranged = arrange(
+                    items,
+                    meta.arrange,
+                    lambda item: basename(self._get_item_path(item)),
+                )
+                return arranged if not meta.reverse else arranged[::-1]
             except InvalidArrangeEntry as e:
                 warning = ArrangeEntryNotFound(e.value, meta.path)
                 if self.options.strict:
@@ -78,7 +96,9 @@ class AwesomeNavigation:
                     warnings.warn(warning)
         return items
 
-    def _process_section(self, section: Section, collapse_recursive: bool) -> Optional[NavigationItem]:
+    def _process_section(
+        self, section: Section, collapse_recursive: bool
+    ) -> Optional[NavigationItem]:
         meta = self.meta.sections[section]
 
         if meta.hide is True:
@@ -89,7 +109,9 @@ class AwesomeNavigation:
 
         self._set_title(section, meta)
 
-        section.children = self._process_children(section.children, collapse_recursive, meta)
+        section.children = self._process_children(
+            section.children, collapse_recursive, meta
+        )
 
         if not section.children:
             return None
@@ -108,7 +130,9 @@ class AwesomeNavigation:
             section.title = meta.title
 
     @staticmethod
-    def _collapse(section: Section, collapse: Optional[bool], collapse_recursive: bool) -> NavigationItem:
+    def _collapse(
+        section: Section, collapse: Optional[bool], collapse_recursive: bool
+    ) -> NavigationItem:
         if collapse is None:
             collapse = collapse_recursive
 
@@ -124,13 +148,14 @@ class AwesomeNavigation:
 
 
 class NavigationMeta:
-
     def __init__(self, items: List[NavigationItem], options: Options):
         self.options = options
         self.sections = {}
 
         root_path = self._gather_metadata(items)
-        self.root = Meta.try_load_from(join_paths(root_path, self.options.filename))
+        self.root = Meta.try_load_from(
+            join_paths(root_path, self.options.filename)
+        )
 
     def _gather_metadata(self, items: List[NavigationItem]) -> Optional[str]:
         paths = []
@@ -140,7 +165,9 @@ class NavigationMeta:
             elif isinstance(item, Section):
                 section_dir = self._gather_metadata(item.children)
                 paths.append(section_dir)
-                self.sections[item] = Meta.try_load_from(join_paths(section_dir, self.options.filename))
+                self.sections[item] = Meta.try_load_from(
+                    join_paths(section_dir, self.options.filename)
+                )
 
         return self._common_dirname(paths)
 
